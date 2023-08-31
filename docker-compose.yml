@@ -1,0 +1,34 @@
+version: "3"
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    ports:
+      - "6443:443"
+      - "6080:80"
+    networks:
+      - internal
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./app/:/var/www/html/
+      - ./log/nginx/:/var/log/nginx/
+      - ./ssl/:/etc/ssl/private/
+    restart: always
+  php:
+    build:
+      context: .
+      dockerfile: php/Dockerfile
+    networks:
+      - internal
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./app/:/var/www/html/
+      - ./upload/:/home/upload/
+      - ./log/php/:/var/log/php/
+    restart: always
+networks:
+  internal:
+    driver: bridge
