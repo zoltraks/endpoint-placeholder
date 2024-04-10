@@ -24,3 +24,18 @@ Optionally specify ``docker-compose.yml`` file.
 ```
 docker-compose -f docker-compose.yml up -d
 ```
+
+If subdirectory can't be created in ``upload`` you'll receive "500 Internal Server Error" response.
+In that case check permissions for ``log`` and ``upload`` directories.
+
+Remove container stack.
+
+```
+docker-compose down
+``` 
+
+If you make any changes in ``Dockerfile`` or ``docker-compose.yml`` files you must rebuild containers.
+
+```
+docker-compose up -d --build
+```
