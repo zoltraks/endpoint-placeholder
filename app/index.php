@@ -2,13 +2,15 @@
 
 $UPLOAD="/home/upload";
 $PERMISSIONS=0777;
+$LOG=ini_get("error_log");
 
 function message($message, $severity="") {
 	$now = DateTime::createFromFormat("U.u", number_format(microtime(true), 6, ".", ""));
 	$text = "";
 	$text .= $now->format("Y-m-d H:i:s.v");
 	$text .= " " . $message . " <br>\n";
-	error_log($text, 0);
+	global $LOG;
+	error_log($text, 3, $LOG);
 }
 
 function error_handler($errno, $errstr) {
