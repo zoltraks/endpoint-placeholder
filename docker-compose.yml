@@ -15,7 +15,7 @@ services:
       - ./app/:/var/www/html/
       - ./log/nginx/:/var/log/nginx/
       - ./ssl/:/etc/ssl/private/
-    restart: always
+    restart: unless-stopped
   php:
     build:
       context: .
@@ -28,7 +28,7 @@ services:
       - ./app/:/var/www/html/
       - ./upload/:/home/upload/
       - ./log/php/:/var/log/php/
-    restart: always
+    restart: unless-stopped
 networks:
   internal:
     driver: bridge
