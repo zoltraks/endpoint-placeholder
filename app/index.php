@@ -19,7 +19,6 @@ function error_handler($errno, $errstr) {
 
 function clone_headers() {
 	foreach (getallheaders() as $name => $value) {
-		// message("Setting header $name: $value");
     		header("$name: $value");
 	}
 }
@@ -54,13 +53,20 @@ function write_peer_file($file) {
 	return true;
 }
 
+function kill($code, $text) {
+	header("HTTP/1.1 $code");
+	exit($text);
+}
+
 set_error_handler("error_handler");
 
 $BODY = file_get_contents('php://input');
 
 if (!is_dir($UPLOAD)) {
 	message("Create directory $UPLOAD");
-	mkdir($UPLOAD);
+	if (!mkdir($UPLOAD)) {
+		kill("500 Internal Server Error", "Failed to create upload directory");
+	}
 }
 
 $YEAR_MONTH=date("Y-m");
@@ -69,7 +75,9 @@ $DIRECTORY="$UPLOAD/$YEAR_MONTH/$TODAY";
 
 if (!is_dir($DIRECTORY)) {
 	message("Create directory $DIRECTORY");
-	mkdir($DIRECTORY, $PERMISSIONS, true);
+	if (!mkdir($DIRECTORY, $PERMISSIONS, true)) {
+		kill("500 Internal Server Error", "Failed to create upload directory");
+	}
 }
 
 $RAND=date("Ymd_His_").rand(10000000, 99999999);
