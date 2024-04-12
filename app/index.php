@@ -41,7 +41,17 @@ if (!function_exists('getallheaders')) {
 }
 
 function clone_headers() {
+	$ignore = array(
+		'content-length',
+		'host',
+		'accept',
+		'content-encoding',
+		'transfer-encoding',
+	);
 	foreach (getallheaders() as $name => $value) {
+		if (in_array(strtolower($name), $ignore)) {
+			continue;
+		}
     		header("$name: $value");
 	}
 }
