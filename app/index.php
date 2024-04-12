@@ -1,22 +1,37 @@
 <?php
 
-$UPLOAD="/home/upload";
-$PERMISSIONS=0777;
-$LOG=ini_get("error_log");
+@require_once('config.php');
 
-function message($message, $severity="") {
+$UPLOAD = @$GLOBALS['UPLOAD'] ?: '/home/upload';
+$PERMISSIONS = @$GLOBALS['PERMISSIONS'] ?: 0777;
+
+$LOG = @$GLOBALS['LOG'] ?: ini_get("error_log") ?: '/var/log/php/error.log';
+
+function message($message, $severity = "") {
 	$now = DateTime::createFromFormat("U.u", number_format(microtime(true), 6, ".", ""));
 	$text = "";
 	$text .= $now->format("Y-m-d H:i:s.v");
 	$text .= " " . $message . " <br>\n";
 	global $LOG;
-	error_log($text, 3, $LOG);
+	@error_log($text, 3, $LOG);
 }
 
 function error_handler($errno, $errstr) {
 	$user = posix_getpwuid(posix_geteuid())['name'];
 	message("Error $errno: $errstr");
 	message("User: $user");
+}
+
+if (!function_exists('getallheaders')) {
+    function getallheaders() {
+        $headers = [];
+        foreach ($_SERVER as $name => $value) {
+            if (substr($name, 0, 5) == 'HTTP_') {
+                $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+            }
+        }
+        return $headers;
+    }
 }
 
 function clone_headers() {
