@@ -13,3 +13,6 @@ $GLOBALS['LOG'] = '../log/php/error.log';
 
 // Request size limit
 $GLOBALS['LIMIT'] = 1048576;
+
+// Enable phpinfo.php endpoint
+$GLOBALS['PHPINFO'] = 0;
