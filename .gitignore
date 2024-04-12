@@ -6,3 +6,4 @@ log/nginx/*
 !log/nginx/.gitkeep
 log/php/*
 !log/php/.gitkeep
+app/config.php
