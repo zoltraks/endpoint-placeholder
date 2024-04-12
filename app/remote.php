@@ -1,1 +1,3 @@
-<?php die($_SERVER['REMOTE_ADDR']);
+<?php
+
+die($_SERVER['REMOTE_ADDR']);

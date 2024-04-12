@@ -1,6 +1,6 @@
 <?php
 
-@require_once('config.php');
+file_exists('config.php') && @require_once 'config.php';
 
 $UPLOAD = @$GLOBALS['UPLOAD'] ?: '/home/upload';
 $PERMISSIONS = @$GLOBALS['PERMISSIONS'] ?: 0777;
