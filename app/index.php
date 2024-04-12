@@ -116,6 +116,6 @@ if (write_peer_file($FILE_PEER)) {
 
 restore_error_handler();
 
-// clone_headers();
+clone_headers();
 
 echo $BODY;
