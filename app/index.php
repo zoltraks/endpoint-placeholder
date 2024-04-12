@@ -1,11 +1,17 @@
 <?php
 
-file_exists('config.php') && @require_once 'config.php';
+file_exists('config.php') && require_once 'config.php';
 
 $UPLOAD = @$GLOBALS['UPLOAD'] ?: '/home/upload';
 $PERMISSIONS = @$GLOBALS['PERMISSIONS'] ?: 0777;
+$LIMIT = @$GLOBALS['LIMIT'] ?: 32768;
 
 $LOG = @$GLOBALS['LOG'] ?: ini_get("error_log") ?: '/var/log/php/error.log';
+
+if ($_SERVER['CONTENT_LENGTH'] > $LIMIT) {
+    http_response_code(500);
+    exit("500 Internal Server Error: Request body size exceeds the limit");
+}
 
 function message($message, $severity = "") {
 	$now = DateTime::createFromFormat("U.u", number_format(microtime(true), 6, ".", ""));

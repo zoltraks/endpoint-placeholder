@@ -10,3 +10,6 @@ $GLOBALS['PERMISSIONS'] = 0777;
 // If not specified or empty then /var/log/php/error.log will be used
 // unless error_log parameter is set in php.ini
 $GLOBALS['LOG'] = '../log/php/error.log';
+
+// Request size limit
+$GLOBALS['LIMIT'] = 1048576;

@@ -47,6 +47,17 @@ If you make any changes in ``Dockerfile`` or ``docker-compose.yml`` files you mu
 docker-compose up -d --build
 ```
 
+Security
+--------
+
+If request content length exceeds size limit, HTTP 500 status code will be returned.
+
+```
+500 Internal Server Error: Request body size exceeds the limit
+```
+
+If not specified, default request size limit is 32 KB.
+
 Web server
 ----------
 
