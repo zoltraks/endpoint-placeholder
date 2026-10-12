@@ -41,8 +41,9 @@ if (!function_exists('getallheaders')) {
 }
 
 function clone_headers() {
+    $skip = ['content-length', 'transfer-encoding', 'connection', 'host'];
     foreach (getallheaders() as $name => $value) {
-	if (!$value) {
+	if (!$value || in_array(strtolower($name), $skip)) {
             continue;
         }
         header("$name: $value");
