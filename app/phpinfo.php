@@ -1,6 +1,6 @@
 <?php
 
-file_exists('config.php') && require_once 'config.php';
+file_exists(__DIR__ . '/config.php') && require_once __DIR__ . '/config.php';
 
 if (!@$GLOBALS['PHPINFO']) {
     http_response_code(404);

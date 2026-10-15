@@ -1,16 +1,23 @@
 <?php
 
-file_exists('config.php') && require_once 'config.php';
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
+error_reporting(E_ALL);
 
-$UPLOAD = @$GLOBALS['UPLOAD'] ?: '/home/upload';
+chdir(__DIR__);
+
+file_exists(__DIR__ . '/config.php') && require_once __DIR__ . '/config.php';
+
+$ROOT = dirname(__DIR__);
+
+$UPLOAD = @$GLOBALS['UPLOAD'] ?: (is_dir('/home/upload') ? '/home/upload' : "$ROOT/upload");
 $PERMISSIONS = @$GLOBALS['PERMISSIONS'] ?: 0777;
 $LIMIT = @$GLOBALS['LIMIT'] ?: 32768;
 
-$LOG = @$GLOBALS['LOG'] ?: ini_get("error_log") ?: '/var/log/php/error.log';
+$LOG = @$GLOBALS['LOG'] ?: ini_get("error_log") ?: (is_dir('/var/log/php') ? '/var/log/php/error.log' : "$ROOT/log/php/error.log");
 
-if ($_SERVER['CONTENT_LENGTH'] > $LIMIT) {
-    http_response_code(500);
-    exit("500 Internal Server Error: Request body size exceeds the limit");
+if (!is_dir(dirname($LOG))) {
+    @mkdir(dirname($LOG), 0777, true);
 }
 
 function message($message, $severity = "") {
@@ -23,7 +30,20 @@ function message($message, $severity = "") {
 }
 
 function error_handler($errno, $errstr) {
-    $user = posix_getpwuid(posix_geteuid())['name'];
+    if (!(error_reporting() & $errno)) {
+        return;
+    }
+    $user = 'unknown';
+    if (function_exists('posix_geteuid') && function_exists('posix_getpwuid')) {
+        $info = @posix_getpwuid(posix_geteuid());
+        if (is_array($info) && isset($info['name'])) {
+            $user = $info['name'];
+        }
+    } elseif (getenv('USERNAME')) {
+        $user = getenv('USERNAME');
+    } else {
+        $user = get_current_user() ?: 'unknown';
+    }
     message("Error $errno: $errstr");
     message("User: $user");
 }
@@ -69,9 +89,12 @@ function write_data_file($file, $body) {
 }
 
 function write_peer_file($file) {
-    $remote = $_SERVER['REMOTE_ADDR'];
-    $method = $_SERVER['REQUEST_METHOD'];
-    $url = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    $remote = $_SERVER['REMOTE_ADDR'] ?? '';
+    $method = $_SERVER['REQUEST_METHOD'] ?? '';
+    $scheme = $_SERVER['REQUEST_SCHEME'] ?? 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? '';
+    $request = $_SERVER['REQUEST_URI'] ?? '/';
+    $url = "$scheme://$host$request";
     $content = "";
     $content .= "REMOTE: $remote\n";
     $content .= "METHOD: $method\n";
@@ -86,6 +109,40 @@ function kill($code, $text) {
 }
 
 set_error_handler("error_handler");
+
+set_exception_handler(function ($e) {
+    message("Exception: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
+    if (!headers_sent()) {
+        header("HTTP/1.1 500 Internal Server Error");
+    }
+    exit("500 Internal Server Error");
+});
+
+register_shutdown_function(function () {
+    $e = error_get_last();
+    if ($e && in_array($e['type'], [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_PARSE], true)) {
+        if (!headers_sent()) {
+            header("HTTP/1.1 500 Internal Server Error");
+        }
+        echo "500 Internal Server Error";
+    }
+});
+
+if (PHP_SAPI === 'cli-server') {
+    $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+    $file = realpath(__DIR__ . $uri);
+    if ($file !== false && $file !== realpath(__FILE__) && is_file($file)
+        && strpos($file, __DIR__ . DIRECTORY_SEPARATOR) === 0
+        && substr($file, -4) === '.php') {
+        require $file;
+        return;
+    }
+}
+
+if (isset($_SERVER['CONTENT_LENGTH']) && $_SERVER['CONTENT_LENGTH'] > $LIMIT) {
+    http_response_code(500);
+    exit("500 Internal Server Error: Request body size exceeds the limit");
+}
 
 $BODY = file_get_contents('php://input');
 

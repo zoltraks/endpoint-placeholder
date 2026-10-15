@@ -58,6 +58,8 @@ If request content length exceeds size limit, HTTP 500 status code will be retur
 
 If not specified, default request size limit is 32 KB.
 
+Internal error details such as file paths and stack traces are written to the log file only and never appear in responses.
+
 Web server
 ----------
 
@@ -115,6 +117,30 @@ server {
 }
 ```
 
+PHP built-in web server
+-----------------------
+
+You can also run the application directly with the PHP built-in web server, without Docker or nginx.
+
+From the repository root:
+
+```
+php -S 0.0.0.0:6080 app/index.php
+```
+
+From the ``app`` directory:
+
+```
+cd app
+php -S 0.0.0.0:6080 index.php
+```
+
+This works on Windows, Linux and macOS - the POSIX extension is not required.
+
+``index.php`` acts as a router, so the auxiliary endpoints ``time.php``, ``remote.php``, ``failure.php`` and ``phpinfo.php`` stay reachable at ``/time.php`` and so on. Every other request hits the capture endpoint.
+
+Files outside the ``app`` directory are never served, even when the document root is the repository root.
+
 Configuration
 -------------
 
@@ -129,7 +155,15 @@ Also remember to set ``LOG`` to log filename. File will be created automatically
 
 Give proper permissions, so files can be written by PHP runtime in specified directories.
 
-Values in ``app/config.example.php`` are default values.
+Relative paths in ``config.php`` are resolved against the ``app`` directory, regardless of the directory the server was launched from.
+
+``app/config.example.php`` contains example values, not defaults. The defaults are:
+
+- ``UPLOAD``: ``/home/upload`` when it exists, otherwise the ``upload`` directory next to ``app``.
+- ``PERMISSIONS``: ``0777``.
+- ``LOG``: the ``error_log`` setting from ``php.ini``, then ``/var/log/php/error.log`` when that directory exists, otherwise ``log/php/error.log`` next to ``app``.
+- ``LIMIT``: ``32768`` bytes (32 KB).
+- ``PHPINFO``: ``0`` (disabled).
 
 Here is an example of my configuration.
 
